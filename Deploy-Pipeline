@@ -1,0 +1,35 @@
+pipeline {
+  agent any
+    stages {
+        stage ('Pull') {
+            steps {
+                git 'https://github.com/cloudmaster2025/sonar.git'
+            }
+        }
+        stage ('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage ('Test') {
+            steps {
+              withSonarQubeEnv(installationName: 'Sonar', credentialsId: 'Sonar-Token') {
+                sh ''' mvn clean verify sonar:sonar \
+                       -Dsonar.projectKey=studentapp '''
+                }
+            }
+        }
+        stage ('Quality-Check') {
+            steps {
+              timeout(time: 30, unit: 'SECONDS') {
+                  waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-Token'
+                }
+            }
+        }
+        stage ('Deploy') {
+            steps {
+                deploy adapters: [tomcat9(alternativeDeploymentContext: '', credentialsId: 'tomcat-cred', path: '', url: 'http://13.114.88.85:8080/')], contextPath: 'studentform', war: 'target/*.war'
+            }
+        }
+    }
+}
