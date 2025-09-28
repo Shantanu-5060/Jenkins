@@ -1,5 +1,10 @@
 pipeline {
   agent any
+  
+  environment {
+      region = 'ap-northeast-1'
+  }
+  
     stages {
         stage ('Pull') {
             steps {
@@ -28,7 +33,7 @@ pipeline {
         }
         stage ('Deliver') {
             steps {
-                withAWS(credentials: 'AWS-Keys', region: 'ap-northeast-1') {
+                withAWS(credentials: 'AWS-Keys', region: "${region}") {
                 sh 'aws s3 cp target/*.war s3://bucket-96175'
                 }
             }
